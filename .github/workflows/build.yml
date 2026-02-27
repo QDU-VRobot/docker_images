@@ -1,0 +1,123 @@
+name: Build CI Images
+
+on:
+  push:
+    branches: [master]
+    paths: ["images/**", ".github/workflows/build-images.yml"]
+  schedule:
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+    inputs:
+      image:
+        description: "Optional: build only this image folder name (e.g. ros2-humble-ci)"
+        required: false
+        default: ""
+      tag:
+        description: "Optional extra tag (e.g. 2026-02-17)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: set-matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -t ALL < <(find . -mindepth 2 -maxdepth 2 -type f -name Dockerfile -print | sed 's|/Dockerfile$||' | sort)
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.image }}" ]; then
+            SEL="${{ inputs.image }}"
+            if [ ! -f "$SEL/Dockerfile" ]; then
+              echo "Input image folder not found: $SEL" >&2
+              exit 1
+            fi
+            ALL=("$SEL")
+          else
+            ALL=("${ALL[@]}")
+          fi
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            git fetch --depth=2 origin "${{ github.ref }}"
+            CHANGED="$(git diff --name-only HEAD~1 HEAD || true)"
+            FILTERED=()
+            for d in "${ALL[@]}"; do
+              name="${d#./}"
+              if echo "$CHANGED" | grep -q "^$name/"; then
+                FILTERED+=("$d")
+              fi
+            done
+            ALL=("${FILTERED[@]}")
+          fi
+
+          if [ "${#ALL[@]}" -eq 0 ]; then
+            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          INC=""
+          for d in "${ALL[@]}"; do
+            name="${d#./}"
+            INC="${INC}{\"name\":\"$name\",\"context\":\"$d\",\"dockerfile\":\"$d/Dockerfile\"},"
+          done
+          INC="[${INC%,}]"
+          echo "matrix={\"include\":$INC}" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: discover
+    if: ${{ fromJson(needs.discover.outputs.matrix).include[0] != null }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH Agent for GitHub private repo access
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY_FOR_GITHUB }}
+
+      - name: Add GitHub to SSH known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Set image repo (lowercase)
+        id: img
+        shell: bash
+        run: |
+          echo "repo=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ steps.img.outputs.repo }}/${{ matrix.name }}:latest
+            ${{ steps.img.outputs.repo }}/${{ matrix.name }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          ssh: |
+            default=${{ env.SSH_AUTH_SOCK }}
