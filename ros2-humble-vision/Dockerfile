@@ -8,6 +8,10 @@ SHELL ["/bin/bash", "-lc"]
 ARG VISION_REPO_SSH="git@github.com:QDU-VRobot/vision_dev.git"
 ARG VISION_BRANCH=""
 
+RUN wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && \
+    sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && \
+    echo "deb https://apt.repos.intel.com/openvino ubuntu22 main" | sudo tee /etc/apt/sources.list.d/intel-openvino.list
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     openssh-client \
@@ -23,7 +27,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libwpa-client-dev \
     libnm-dev \
     libudev-dev \
-    libasio-dev 
+    libasio-dev \
+    openvino-2026.1.0
 
 RUN rosdep init || true
 
