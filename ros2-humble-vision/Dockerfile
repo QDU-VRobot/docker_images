@@ -63,7 +63,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnvonnxparsers10=${TENSORRT_PKG_VER} \
     libnvonnxparsers-dev=${TENSORRT_PKG_VER} \
     tensorrt-dev=${TENSORRT_PKG_VER} \
-    && find /usr/lib/x86_64-linux-gnu -name "*.a" -delete \
     && find /usr/local/cuda* -name "*.a" -delete \
     && rm -rf /var/lib/apt/lists/*
 
