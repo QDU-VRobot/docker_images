@@ -3,6 +3,7 @@
 FROM ros:humble-ros-base-jammy
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV ROS_DISTRO=humble
 SHELL ["/bin/bash", "-lc"]
 
 ARG VISION_REPO_SSH="git@github.com:QDU-VRobot/vision_dev.git"
@@ -121,9 +122,9 @@ RUN --mount=type=ssh \
 
 WORKDIR /opt/ws/vision_dev
 RUN set -euxo pipefail; \
-    source /opt/ros/humble/setup.bash; \
+    apt-get update; \
     rosdep update; \
-    rosdep install --from-paths src --ignore-src -r -y && \
+    rosdep install --rosdistro ${ROS_DISTRO} --from-paths src --ignore-src -r -y; \
     rm -rf /var/lib/apt/lists/*
 
 ENV DEBIAN_FRONTEND=dialog
