@@ -63,23 +63,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnvonnxparsers10=${TENSORRT_PKG_VER} \
     libnvonnxparsers-dev=${TENSORRT_PKG_VER} \
     tensorrt-dev=${TENSORRT_PKG_VER} \
-    && apt-mark hold \
-    libnvinfer-bin \
-    libnvinfer10 \
-    libnvinfer-dev \
-    libnvinfer-dispatch10 \
-    libnvinfer-dispatch-dev \
-    libnvinfer-headers-dev \
-    libnvinfer-headers-plugin-dev \
-    libnvinfer-lean10 \
-    libnvinfer-lean-dev \
-    libnvinfer-plugin10 \
-    libnvinfer-plugin-dev \
-    libnvinfer-vc-plugin10 \
-    libnvinfer-vc-plugin-dev \
-    libnvonnxparsers10 \
-    libnvonnxparsers-dev \
-    tensorrt-dev \
+    && find /usr/lib/x86_64-linux-gnu -name "*.a" -delete \
+    && find /usr/local/cuda* -name "*.a" -delete \
     && rm -rf /var/lib/apt/lists/*
 
 # If your build scripts really import Python TensorRT during compile/configure,
