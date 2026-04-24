@@ -30,7 +30,6 @@ RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/
     dpkg -i cuda-keyring_1.1-1_all.deb && \
     rm -f cuda-keyring_1.1-1_all.deb
 
-# 现在再安装真正依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     openssh-client \
@@ -47,11 +46,55 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasio-dev \
     openvino-2026.1.0 \
     cuda-toolkit-${CUDA_PKG_VER} \
-    tensorrt=${TENSORRT_PKG_VER} \
+    libnvinfer-bin=${TENSORRT_PKG_VER} \
+    libnvinfer10=${TENSORRT_PKG_VER} \
+    libnvinfer-dev=${TENSORRT_PKG_VER} \
+    libnvinfer-dispatch10=${TENSORRT_PKG_VER} \
+    libnvinfer-dispatch-dev=${TENSORRT_PKG_VER} \
+    libnvinfer-headers-dev=${TENSORRT_PKG_VER} \
+    libnvinfer-headers-plugin-dev=${TENSORRT_PKG_VER} \
+    libnvinfer-lean10=${TENSORRT_PKG_VER} \
+    libnvinfer-lean-dev=${TENSORRT_PKG_VER} \
+    libnvinfer-plugin10=${TENSORRT_PKG_VER} \
+    libnvinfer-plugin-dev=${TENSORRT_PKG_VER} \
+    libnvinfer-vc-plugin10=${TENSORRT_PKG_VER} \
+    libnvinfer-vc-plugin-dev=${TENSORRT_PKG_VER} \
+    libnvonnxparsers10=${TENSORRT_PKG_VER} \
+    libnvonnxparsers-dev=${TENSORRT_PKG_VER} \
     tensorrt-dev=${TENSORRT_PKG_VER} \
-    python3-libnvinfer=${TENSORRT_PKG_VER} \
-    python3-libnvinfer-dev=${TENSORRT_PKG_VER} \
+    && apt-mark hold \
+    libnvinfer-bin \
+    libnvinfer10 \
+    libnvinfer-dev \
+    libnvinfer-dispatch10 \
+    libnvinfer-dispatch-dev \
+    libnvinfer-headers-dev \
+    libnvinfer-headers-plugin-dev \
+    libnvinfer-lean10 \
+    libnvinfer-lean-dev \
+    libnvinfer-plugin10 \
+    libnvinfer-plugin-dev \
+    libnvinfer-vc-plugin10 \
+    libnvinfer-vc-plugin-dev \
+    libnvonnxparsers10 \
+    libnvonnxparsers-dev \
+    tensorrt-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# If your build scripts really import Python TensorRT during compile/configure,
+# uncomment these lines and keep the same pinned version:
+#
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     python3-libnvinfer=${TENSORRT_PKG_VER} \
+#     python3-libnvinfer-dev=${TENSORRT_PKG_VER} \
+#     python3-libnvinfer-lean=${TENSORRT_PKG_VER} \
+#     python3-libnvinfer-dispatch=${TENSORRT_PKG_VER} \
+#     && apt-mark hold \
+#     python3-libnvinfer \
+#     python3-libnvinfer-dev \
+#     python3-libnvinfer-lean \
+#     python3-libnvinfer-dispatch \
+#     && rm -rf /var/lib/apt/lists/*
 
 ENV CUDA_HOME=/usr/local/cuda-12.5
 ENV PATH=${CUDA_HOME}/bin:${PATH}
