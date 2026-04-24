@@ -8,23 +8,33 @@ SHELL ["/bin/bash", "-lc"]
 ARG VISION_REPO_SSH="git@github.com:QDU-VRobot/vision_dev.git"
 ARG VISION_BRANCH=""
 
-# Pin CUDA / TensorRT versions
 ARG CUDA_PKG_VER="12-5"
 ARG TENSORRT_PKG_VER="10.3.0.26-1+cuda12.5"
 ARG NVIDIA_REPO_ARCH="x86_64"
 
-# Intel OpenVINO repo
-RUN wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && \
-    sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && \
-    echo "deb https://apt.repos.intel.com/openvino ubuntu22 main" | sudo tee /etc/apt/sources.list.d/intel-openvino.list
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    gnupg \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
+# Intel OpenVINO repo
+RUN curl -fsSL https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+    | gpg --dearmor -o /usr/share/keyrings/intel-openvino.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/intel-openvino.gpg] https://apt.repos.intel.com/openvino ubuntu22 main" \
+    > /etc/apt/sources.list.d/intel-openvino.list
+
+# NVIDIA CUDA/TensorRT repo
+RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/${NVIDIA_REPO_ARCH}/cuda-keyring_1.1-1_all.deb && \
+    dpkg -i cuda-keyring_1.1-1_all.deb && \
+    rm -f cuda-keyring_1.1-1_all.deb
+
+# 现在再安装真正依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     openssh-client \
-    ca-certificates \
-    curl \
     unzip \
-    gnupg \
     build-essential \
     cmake \
     ninja-build \
@@ -40,9 +50,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tensorrt=${TENSORRT_PKG_VER} \
     tensorrt-dev=${TENSORRT_PKG_VER} \
     python3-libnvinfer=${TENSORRT_PKG_VER} \
-    python3-libnvinfer-dev=${TENSORRT_PKG_VER}
+    python3-libnvinfer-dev=${TENSORRT_PKG_VER} \
+    && rm -rf /var/lib/apt/lists/*
 
-# Optional but usually helpful for build systems
 ENV CUDA_HOME=/usr/local/cuda-12.5
 ENV PATH=${CUDA_HOME}/bin:${PATH}
 ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
@@ -67,7 +77,7 @@ RUN --mount=type=ssh \
     git submodule update --init --recursive
 
 WORKDIR /opt/ws/vision_dev
-RUN set -exo pipefail; \
+RUN set -euxo pipefail; \
     source /opt/ros/humble/setup.bash; \
     rosdep update; \
     rosdep install --from-paths src --ignore-src -r -y && \
