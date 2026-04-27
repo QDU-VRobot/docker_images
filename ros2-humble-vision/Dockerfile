@@ -67,8 +67,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean
 
 ENV CUDA_HOME=/usr/local/cuda-12.5
+ENV CUDAToolkit_ROOT=/usr/local/cuda-12.5
 ENV PATH=${CUDA_HOME}/bin:${PATH}
 ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+ENV CMAKE_CUDA_COMPILER=${CUDA_HOME}/bin/nvcc
+ENV CMAKE_CUDA_HOST_COMPILER=/usr/bin/g++
 
 RUN rosdep init || true
 
