@@ -46,40 +46,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libudev-dev \
     libasio-dev \
     openvino-2026.1.0 \
-    cuda-toolkit-${CUDA_PKG_VER} \
-    libnvinfer-bin=${TENSORRT_PKG_VER} \
+    cuda-compiler-${CUDA_PKG_VER} \
+    cuda-cudart-dev-${CUDA_PKG_VER} \
     libnvinfer10=${TENSORRT_PKG_VER} \
     libnvinfer-dev=${TENSORRT_PKG_VER} \
-    libnvinfer-dispatch10=${TENSORRT_PKG_VER} \
-    libnvinfer-dispatch-dev=${TENSORRT_PKG_VER} \
-    libnvinfer-headers-dev=${TENSORRT_PKG_VER} \
-    libnvinfer-headers-plugin-dev=${TENSORRT_PKG_VER} \
-    libnvinfer-lean10=${TENSORRT_PKG_VER} \
-    libnvinfer-lean-dev=${TENSORRT_PKG_VER} \
     libnvinfer-plugin10=${TENSORRT_PKG_VER} \
     libnvinfer-plugin-dev=${TENSORRT_PKG_VER} \
-    libnvinfer-vc-plugin10=${TENSORRT_PKG_VER} \
-    libnvinfer-vc-plugin-dev=${TENSORRT_PKG_VER} \
     libnvonnxparsers10=${TENSORRT_PKG_VER} \
     libnvonnxparsers-dev=${TENSORRT_PKG_VER} \
-    tensorrt-dev=${TENSORRT_PKG_VER} \
     && find /usr/local/cuda* -name "*.a" -delete \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf \
+         /var/lib/apt/lists/* \
+         /tmp/* \
+         /var/tmp/* \
+         /usr/local/cuda*/samples \
+         /usr/local/cuda*/doc \
+         /usr/local/cuda*/extras \
+    && apt-get clean
 
-# If your build scripts really import Python TensorRT during compile/configure,
-# uncomment these lines and keep the same pinned version:
-#
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#     python3-libnvinfer=${TENSORRT_PKG_VER} \
-#     python3-libnvinfer-dev=${TENSORRT_PKG_VER} \
-#     python3-libnvinfer-lean=${TENSORRT_PKG_VER} \
-#     python3-libnvinfer-dispatch=${TENSORRT_PKG_VER} \
-#     && apt-mark hold \
-#     python3-libnvinfer \
-#     python3-libnvinfer-dev \
-#     python3-libnvinfer-lean \
-#     python3-libnvinfer-dispatch \
-#     && rm -rf /var/lib/apt/lists/*
 
 ENV CUDA_HOME=/usr/local/cuda-12.5
 ENV PATH=${CUDA_HOME}/bin:${PATH}
