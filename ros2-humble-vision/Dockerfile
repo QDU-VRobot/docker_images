@@ -50,11 +50,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-cudart-dev-${CUDA_PKG_VER} \
     libnvinfer10=${TENSORRT_PKG_VER} \
     libnvinfer-dev=${TENSORRT_PKG_VER} \
+    libnvinfer-headers-dev=${TENSORRT_PKG_VER} \
     libnvinfer-plugin10=${TENSORRT_PKG_VER} \
     libnvinfer-plugin-dev=${TENSORRT_PKG_VER} \
+    libnvinfer-headers-plugin-dev=${TENSORRT_PKG_VER} \
     libnvonnxparsers10=${TENSORRT_PKG_VER} \
     libnvonnxparsers-dev=${TENSORRT_PKG_VER} \
-    && find /usr/local/cuda* -name "*.a" -delete \
+    && find /usr/local/cuda* -name "*.a" -delete || true \
     && rm -rf \
          /var/lib/apt/lists/* \
          /tmp/* \
@@ -63,7 +65,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
          /usr/local/cuda*/doc \
          /usr/local/cuda*/extras \
     && apt-get clean
-
 
 ENV CUDA_HOME=/usr/local/cuda-12.5
 ENV PATH=${CUDA_HOME}/bin:${PATH}
