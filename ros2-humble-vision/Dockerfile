@@ -56,7 +56,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnvinfer-headers-plugin-dev=${TENSORRT_PKG_VER} \
     libnvonnxparsers10=${TENSORRT_PKG_VER} \
     libnvonnxparsers-dev=${TENSORRT_PKG_VER} \
-    && find /usr/local/cuda* -name "*.a" -delete || true \
+    && (find /usr/lib/x86_64-linux-gnu \
+      \( -name "libnvinfer*.a" \
+         -o -name "libnvonnxparser*.a" \
+         -o -name "libnvparsers*.a" \) \
+      -delete 2>/dev/null || true) \
     && rm -rf \
          /var/lib/apt/lists/* \
          /tmp/* \
