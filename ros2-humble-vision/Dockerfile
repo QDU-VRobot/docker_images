@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     gnupg \
+    gpg \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
@@ -30,6 +31,14 @@ RUN curl -fsSL https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-P
 RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/${NVIDIA_REPO_ARCH}/cuda-keyring_1.1-1_all.deb && \
     dpkg -i cuda-keyring_1.1-1_all.deb && \
     rm -f cuda-keyring_1.1-1_all.deb
+
+# Kitware CMake repo repo
+RUN wget -O /tmp/kitware-archive-latest.asc https://apt.kitware.com/keys/kitware-archive-latest.asc && \
+    gpg --dearmor -o /usr/share/keyrings/kitware-archive-keyring.gpg /tmp/kitware-archive-latest.asc && \
+    echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ jammy main" \
+      > /etc/apt/sources.list.d/kitware.list && \
+    rm -f /tmp/kitware-archive-latest.asc
+
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
